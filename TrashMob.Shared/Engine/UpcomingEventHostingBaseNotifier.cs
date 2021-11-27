@@ -55,6 +55,24 @@ namespace TrashMob.Shared.Engine
                         continue;
                     }
 
+                    // Don't send the today reminder until after midnight local time
+                    if (NumberOfHoursInWindow <= 24)
+                    {
+                        // Get the event local time
+                        var eventTime = await MapRepository.GetTimeForPoint(new Tuple<double, double>(mobEvent.Latitude.Value, mobEvent.Longitude.Value), mobEvent.EventDate).ConfigureAwait(false);
+                        var eventDate = DateTime.Parse(eventTime).Date;
+
+                        // Get the current local time
+                        var currentTime = await MapRepository.GetTimeForPoint(new Tuple<double, double>(mobEvent.Latitude.Value, mobEvent.Longitude.Value), DateTimeOffset.UtcNow).ConfigureAwait(false);
+                        var currentDate = DateTime.Parse(eventTime).Date;
+
+                        // If the EventDate (local) is not the same as the current date (local), ignore for now
+                        if (eventDate > currentDate)
+                        {
+                            continue;
+                        }
+                    }
+
                     // Add to the event list to be sent
                     eventsToNotifyUserFor.Add(mobEvent);
                 }
